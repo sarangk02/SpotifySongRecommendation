@@ -1,0 +1,39 @@
+
+
+
+    # tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+    # tfidf_matrix = tfidf_vectorizer.fit_transform(
+    #     df['Artist'] + ' ' + df['Track'])
+
+    # tfidf_matrix.shape
+
+    numerical_features = ['Danceability', 'Energy', 'Key', 'Loudness', 'Speechiness',
+                          'Acousticness', 'Instrumentalness', 'Liveness', 'Valence', 'Tempo', 'Duration_ms']
+    for feature in numerical_features:
+        df[feature] = df[feature].fillna(0)
+    
+    # final_df = pd.concat(
+    #     [pd.DataFrame(tfidf_matrix.toarray()), df[numerical_features]])
+    # cs = cosine_similarity(final_df)
+    cs = cosine_similarity(df[numerical_features])
+
+    # Calculate cosine similarities between items
+    # cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
+    # print(type(cosine_sim))
+    # Create a mapping of indices to track names
+    indices = pd.Series(df.index, index=df['Track']).drop_duplicates()
+
+    def get_recommendations(track_name, cosine_sim=cs):
+        
+        idx = indices[track_name]
+        sim_scores = list(enumerate(cosine_sim[idx]))
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+        # Exclude the input track (most similar is itself) #top 10
+        sim_scores = sim_scores[1:11]
+        track_indices = [i[0] for i in sim_scores]
+        return df['Track'].iloc[track_indices]
+
+    song = st.text_input("Enter Song Name - ").strip()
+
+    if st.button("Enter"):
+        st.table(get_recommendations(song))
